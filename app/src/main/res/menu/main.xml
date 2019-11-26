@@ -17,18 +17,23 @@ limitations under the License.
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity" >
-    <item android:id="@+id/action_settings"
-        android:title="@string/action_settings"
-        android:orderInCategory="100"
-        app:showAsAction="never" />
 
     <item android:id="@+id/action_read_data"
         android:title="Read step data"
         android:orderInCategory="100"
         app:showAsAction="never" />
     <item
-        android:id="@+id/preious_workouts"
+        android:id="@+id/upload_data"
         android:orderInCategory="101"
-        android:title="Display Previous Workouts" />
+        android:title="Upload Data" />
+    <item
+        android:id="@+id/compare_data"
+        android:orderInCategory="100"
+        android:title="Compare Data"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/display_history"
+        android:orderInCategory="102"
+        android:title="Display History" />
 
 </menu>

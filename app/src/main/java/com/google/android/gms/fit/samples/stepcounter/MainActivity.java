@@ -15,6 +15,8 @@
  */
 package com.google.android.gms.fit.samples.stepcounter;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
@@ -23,11 +25,9 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.TextView;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInApi;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.fit.samples.common.logger.Log;
@@ -44,8 +44,9 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.*;
-import com.google.android.gms.internal.*;
+//import com.google.firebase.database.DatabaseReference;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,7 +60,8 @@ public class MainActivity extends AppCompatActivity {
   public static final String TAG = "StepCounter";
   private static final int REQUEST_OAUTH_REQUEST_CODE = 0x1001;
   long previous_steps = 0;
-  String signedIn = "isaac.flage@gmail";
+  public String signedIn;
+
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +86,23 @@ public class MainActivity extends AppCompatActivity {
     } else {
       subscribe();
     }
+
+    Account[] accounts = AccountManager.get(this).getAccounts();
+    if(accounts != null && accounts.length > 0) {
+      ArrayList playAccounts = new ArrayList();
+      for (Account account : accounts) {
+        signedIn = account.name;
+
+      }
+
+    }
+  }
+
+  private void startSignInIntent() {
+    GoogleSignInClient signInClient = GoogleSignIn.getClient(this,
+            GoogleSignInOptions.DEFAULT_SIGN_IN);
+    Intent intent = signInClient.getSignInIntent();
+    startActivityForResult(intent, 1);
   }
 
   @Override
@@ -92,6 +111,13 @@ public class MainActivity extends AppCompatActivity {
       if (requestCode == REQUEST_OAUTH_REQUEST_CODE) {
         subscribe();
       }
+    }
+    if (GoogleSignIn.getLastSignedInAccount(this) != null){
+      signedIn = GoogleSignIn.getLastSignedInAccount(this).getId();
+
+    }
+    else {
+      this.startSignInIntent();
     }
   }
 
@@ -147,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
     // Inflate the main; this adds items to the action bar if it is present.
     getMenuInflater().inflate(R.menu.main, menu);
     return true;
+
   }
 
   @Override
@@ -156,8 +183,16 @@ public class MainActivity extends AppCompatActivity {
       readData();
       return true;
     }
-    else if (id == R.id.preious_workouts){
+    else if (id == R.id.upload_data){
       displayOldWorkout();
+      return true;
+    }
+    else if (id == R.id.compare_data){
+      compareData();
+      return true;
+    }
+    else if (id == R.id.display_history){
+      displayHistory();
       return true;
     }
     return super.onOptionsItemSelected(item);
@@ -185,17 +220,18 @@ public class MainActivity extends AppCompatActivity {
   }
 
 
+
   //Testing to see if I can store step data in a variable
   private void displayOldWorkout(){
     FirebaseFirestore db = FirebaseFirestore.getInstance();
 // Create a new user with a first and last name
     Map<String, Object> user = new HashMap<>();
-    user.put("first", "Ada");
-    user.put("last", "Lovelace");
-    user.put("born", 1815);
+    user.put("email", signedIn);
+    //user.put("last", "Lovelace");
+    user.put("steps", previous_steps);
 
 // Add a new document with a generated ID
-    db.collection("users")
+    db.collection("workouts")
             .add(user)
             .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
               @Override
@@ -210,4 +246,53 @@ public class MainActivity extends AppCompatActivity {
               }
             });
   }
+  ArrayList<Integer> userSteps;
+  private void compareData(){
+    //Read in other users data
+
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+    db.collection("workouts")
+            .get()
+            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+              @Override
+              public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                  for (DocumentSnapshot document : task.getResult()) {
+                    Log.d(TAG, " => " + document.get("steps"));
+                  }
+                } else {
+                  Log.d(TAG, "Error getting documents: ", task.getException());
+                }
+              }
+            });
+
+    //int percent = 0;
+    //Log.d(TAG, "Your are beating " + percent + "% of users. Keep it up!");
+  }
+
+  private void displayHistory(){
+    //Read in other users data
+
+    FirebaseFirestore db = FirebaseFirestore.getInstance();
+    db.collection("workouts")
+            .whereEqualTo("email", signedIn)
+            .get()
+            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+              @Override
+              public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                  for (DocumentSnapshot document : task.getResult()) {
+                    Log.d(TAG, " => " + document.getData());
+                  }
+                } else {
+                  Log.d(TAG, "Error getting documents: ", task.getException());
+                }
+              }
+            });
+
+    //int percent = 0;
+    //Log.d(TAG, "Your are beating " + percent + "% of users. Keep it up!");
+  }
+
+
 }
