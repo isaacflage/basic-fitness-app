@@ -46,9 +46,12 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.*;
 //import com.google.firebase.database.DatabaseReference;
 
+import java.lang.reflect.Array;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.*;
 
 /**
  * This sample demonstrates combining the Recording API and History API of the Google Fit platform
@@ -59,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
 
   public static final String TAG = "StepCounter";
   private static final int REQUEST_OAUTH_REQUEST_CODE = 0x1001;
-  long previous_steps = 0;
+  int previous_steps = 0;
   public String signedIn;
 
 
@@ -156,7 +159,7 @@ public class MainActivity extends AppCompatActivity {
                         ? 0
                         : dataSet.getDataPoints().get(0).getValue(Field.FIELD_STEPS).asInt();
                 Log.i(TAG, "Total steps: " + total);
-                previous_steps = total;
+                previous_steps = (int)total;
               }
             })
         .addOnFailureListener(
@@ -246,10 +249,10 @@ public class MainActivity extends AppCompatActivity {
               }
             });
   }
-  ArrayList<Integer> userSteps;
+  ArrayList<String> userSteps = new ArrayList<String>();
+  ArrayList<Integer> steps  = new ArrayList<Integer>();
   private void compareData(){
     //Read in other users data
-
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     db.collection("workouts")
             .get()
@@ -258,16 +261,51 @@ public class MainActivity extends AppCompatActivity {
               public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if (task.isSuccessful()) {
                   for (DocumentSnapshot document : task.getResult()) {
-                    Log.d(TAG, " => " + document.get("steps"));
+                    userSteps.add(document.get("steps").toString());
+
+                    //String[] steps = x.split();
+                    //int[] data = new int[steps.length];
+                    //Log.w(TAG, x);
+                   /*
+                    for (int y = 0; y < steps.length; y++) {
+                     data[y] = Integer.getInteger(steps[y]);
+                    }
+                    bubbleSort(data);
+                    for(int z = 0; z < data.length; z++){
+                      Log.println(1, TAG, String.valueOf(data[z]));
+                    }
+
+                    */
+                   // Log.d(TAG, document.get("steps") + ",");
                   }
+                  //sort here
+
+                  for(int x = 0; x < userSteps.size(); x++){
+                    steps.add(Integer.valueOf(userSteps.get(x)));
+                  }
+                  bubbleSort(steps);
+
+                  /*
+                  //make sure numbers are sorted
+                  for (int y = 0; y < steps.size(); y++){
+                    Log.w(TAG, String.valueOf(steps.get(y)));
+                  }
+                  */
+                  DecimalFormat df = new DecimalFormat("#,###,##0.00");
+
+                  double percent = ((steps.indexOf(previous_steps)) / (float)steps.size()) * 100;
+                  Log.d(TAG,"You are beating " + df.format(percent)  + "% of users. Keep it up!");
+
+
                 } else {
                   Log.d(TAG, "Error getting documents: ", task.getException());
                 }
               }
             });
 
-    //int percent = 0;
-    //Log.d(TAG, "Your are beating " + percent + "% of users. Keep it up!");
+
+
+
   }
 
   private void displayHistory(){
@@ -282,7 +320,7 @@ public class MainActivity extends AppCompatActivity {
               public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if (task.isSuccessful()) {
                   for (DocumentSnapshot document : task.getResult()) {
-                    Log.d(TAG, " => " + document.getData());
+                    Log.d(TAG, " => " + document.get("steps") );
                   }
                 } else {
                   Log.d(TAG, "Error getting documents: ", task.getException());
@@ -293,6 +331,22 @@ public class MainActivity extends AppCompatActivity {
     //int percent = 0;
     //Log.d(TAG, "Your are beating " + percent + "% of users. Keep it up!");
   }
+
+  private void bubbleSort(ArrayList<Integer> arr)
+  {
+    int n = arr.size();
+    for (int i = 0; i < n-1; i++)
+      for (int j = 0; j < n-i-1; j++)
+        if (arr.get(j) > arr.get(j+1))
+        {
+          // swap arr[j+1] and arr[i]
+          int temp = arr.get(j);
+          arr.set(j, arr.get(j+1));
+          arr.set(j+1, temp);
+        }
+  }
+
+
 
 
 }
