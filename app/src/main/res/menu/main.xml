@@ -16,24 +16,30 @@ limitations under the License.
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".MainActivity" >
+    tools:context=".MainActivity"
+    android:background="@drawable/list_grad"
+    >
 
     <item android:id="@+id/action_read_data"
         android:title="Read step data"
         android:orderInCategory="100"
-        app:showAsAction="never" />
+        app:showAsAction="never"
+        android:colorBackground="@drawable/list_grad"/>
     <item
         android:id="@+id/upload_data"
         android:orderInCategory="101"
-        android:title="Upload Data" />
+        android:title="Upload Data"
+        android:background="@drawable/list_grad"/>
     <item
         android:id="@+id/compare_data"
         android:orderInCategory="100"
         android:title="Compare Data"
-        app:showAsAction="never" />
+        app:showAsAction="never"
+        android:background="@drawable/list_grad"/>
     <item
         android:id="@+id/display_history"
         android:orderInCategory="102"
-        android:title="Display History" />
+        android:title="Display History"
+        android:background="@drawable/list_grad"/>
 
 </menu>

@@ -20,11 +20,15 @@ import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -47,11 +51,14 @@ import com.google.firebase.firestore.*;
 //import com.google.firebase.database.DatabaseReference;
 
 import java.lang.reflect.Array;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.*;
+import java.util.Calendar;
 
 /**
  * This sample demonstrates combining the Recording API and History API of the Google Fit platform
@@ -64,13 +71,16 @@ public class MainActivity extends AppCompatActivity {
   private static final int REQUEST_OAUTH_REQUEST_CODE = 0x1001;
   int previous_steps = 0;
   public String signedIn;
-
+  public TextView textView;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
-
+    textView = (TextView) findViewById(R.id.textView);
+    ActionBar bar = getSupportActionBar();
+    bar.setBackgroundDrawable(new ColorDrawable(0xff23729a));
+    bar.setTitle(Html.fromHtml("<font color=\"#FFFFFF\">" + getString(R.string.app_name) + "</font>"));
     // This method sets up our custom logger, which will print all log messages to the device
     // screen, as well as to adb logcat.
     initializeLogging();
@@ -115,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
         subscribe();
       }
     }
+    /*
     if (GoogleSignIn.getLastSignedInAccount(this) != null){
       signedIn = GoogleSignIn.getLastSignedInAccount(this).getId();
 
@@ -122,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
     else {
       this.startSignInIntent();
     }
+    */
   }
 
   /** Records step data by requesting a subscription to background step data. */
@@ -135,9 +147,9 @@ public class MainActivity extends AppCompatActivity {
               @Override
               public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
-                  Log.i(TAG, "Successfully subscribed!");
+                  textView.append("\n Subscribed");
                 } else {
-                  Log.w(TAG, "There was a problem subscribing.", task.getException());
+                  textView.append("\n There was a problem subscribing." + task.getException());
                 }
               }
             });
@@ -158,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
                     dataSet.isEmpty()
                         ? 0
                         : dataSet.getDataPoints().get(0).getValue(Field.FIELD_STEPS).asInt();
-                Log.i(TAG, "Total steps: " + total);
+                textView.setText("\n Total steps: " + total);
                 previous_steps = (int)total;
               }
             })
@@ -166,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
             new OnFailureListener() {
               @Override
               public void onFailure(@NonNull Exception e) {
-                Log.w(TAG, "There was a problem getting the step count.", e);
+                textView.setText("\n There was a problem getting the step count." + e);
               }
             });
   }
@@ -211,41 +223,41 @@ public class MainActivity extends AppCompatActivity {
     MessageOnlyLogFilter msgFilter = new MessageOnlyLogFilter();
     logWrapper.setNext(msgFilter);
     // On screen logging via a customized TextView.
-    LogView logView = (LogView) findViewById(R.id.sample_logview);
+    //LogView logView = (LogView) findViewById(R.id.sample_logview);
 
     // Fixing this lint error adds logic without benefit.
     // noinspection AndroidLintDeprecation
-    logView.setTextAppearance(R.style.Log);
+    //.setTextAppearance(R.style.Log);
 
-    logView.setBackgroundColor(Color.WHITE);
-    msgFilter.setNext(logView);
-    Log.i(TAG, "Ready");
+    //logView.setBackgroundColor(Color.WHITE);
+    //msgFilter.setNext(logView);
+    textView.append("\n Ready");
   }
 
+  Date currentTime = Calendar.getInstance().getTime();
 
+  DateFormat df = new SimpleDateFormat("dd/MM/yyyy, HH:mm");
 
-  //Testing to see if I can store step data in a variable
   private void displayOldWorkout(){
     FirebaseFirestore db = FirebaseFirestore.getInstance();
-// Create a new user with a first and last name
     Map<String, Object> user = new HashMap<>();
     user.put("email", signedIn);
-    //user.put("last", "Lovelace");
     user.put("steps", previous_steps);
+    user.put("date", df.format(currentTime));
 
-// Add a new document with a generated ID
+    // Add a new document with a generated ID
     db.collection("workouts")
             .add(user)
             .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
               @Override
               public void onSuccess(DocumentReference documentReference) {
-                Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                textView.setText("\n Successfully uploaded data.");
               }
             })
             .addOnFailureListener(new OnFailureListener() {
               @Override
               public void onFailure(@NonNull Exception e) {
-                Log.w(TAG, "Error adding document", e);
+                textView.append("\n Error adding document" + e);
               }
             });
   }
@@ -263,20 +275,7 @@ public class MainActivity extends AppCompatActivity {
                   for (DocumentSnapshot document : task.getResult()) {
                     userSteps.add(document.get("steps").toString());
 
-                    //String[] steps = x.split();
-                    //int[] data = new int[steps.length];
-                    //Log.w(TAG, x);
-                   /*
-                    for (int y = 0; y < steps.length; y++) {
-                     data[y] = Integer.getInteger(steps[y]);
-                    }
-                    bubbleSort(data);
-                    for(int z = 0; z < data.length; z++){
-                      Log.println(1, TAG, String.valueOf(data[z]));
-                    }
 
-                    */
-                   // Log.d(TAG, document.get("steps") + ",");
                   }
                   //sort here
 
@@ -285,20 +284,14 @@ public class MainActivity extends AppCompatActivity {
                   }
                   bubbleSort(steps);
 
-                  /*
-                  //make sure numbers are sorted
-                  for (int y = 0; y < steps.size(); y++){
-                    Log.w(TAG, String.valueOf(steps.get(y)));
-                  }
-                  */
                   DecimalFormat df = new DecimalFormat("#,###,##0.00");
 
                   double percent = ((steps.indexOf(previous_steps)) / (float)steps.size()) * 100;
-                  Log.d(TAG,"You are beating " + df.format(percent)  + "% of users. Keep it up!");
+                  textView.setText("\n You are beating " + df.format(percent)  + "% of users. Keep it up!");
 
 
                 } else {
-                  Log.d(TAG, "Error getting documents: ", task.getException());
+                  textView.setText("\n Error getting documents: " + task.getException());
                 }
               }
             });
@@ -310,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
 
   private void displayHistory(){
     //Read in other users data
-
+    textView.setText("\n Previous Workouts:");
     FirebaseFirestore db = FirebaseFirestore.getInstance();
     db.collection("workouts")
             .whereEqualTo("email", signedIn)
@@ -320,16 +313,14 @@ public class MainActivity extends AppCompatActivity {
               public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if (task.isSuccessful()) {
                   for (DocumentSnapshot document : task.getResult()) {
-                    Log.d(TAG, " => " + document.get("steps") );
+                    textView.append("\n Date: " + document.get("date") + "\n\t Steps: "+ document.get("steps"));
                   }
                 } else {
-                  Log.d(TAG, "Error getting documents: ", task.getException());
+                  textView.append("\n Error getting documents: " + task.getException());
                 }
               }
             });
 
-    //int percent = 0;
-    //Log.d(TAG, "Your are beating " + percent + "% of users. Keep it up!");
   }
 
   private void bubbleSort(ArrayList<Integer> arr)
