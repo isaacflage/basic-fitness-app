@@ -67,7 +67,6 @@ import java.util.Calendar;
  */
 public class MainActivity extends AppCompatActivity {
 
-  //public static final String TAG = "StepCounter";
   private static final int REQUEST_OAUTH_REQUEST_CODE = 0x1001;
   int previous_steps = 0;
   public String signedIn;
