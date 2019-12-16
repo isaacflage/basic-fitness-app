@@ -67,7 +67,7 @@ import java.util.Calendar;
  */
 public class MainActivity extends AppCompatActivity {
 
-  public static final String TAG = "StepCounter";
+  //public static final String TAG = "StepCounter";
   private static final int REQUEST_OAUTH_REQUEST_CODE = 0x1001;
   int previous_steps = 0;
   public String signedIn;
@@ -81,9 +81,7 @@ public class MainActivity extends AppCompatActivity {
     ActionBar bar = getSupportActionBar();
     bar.setBackgroundDrawable(new ColorDrawable(0xff23729a));
     bar.setTitle(Html.fromHtml("<font color=\"#FFFFFF\">" + getString(R.string.app_name) + "</font>"));
-    // This method sets up our custom logger, which will print all log messages to the device
-    // screen, as well as to adb logcat.
-    initializeLogging();
+
 
     FitnessOptions fitnessOptions =
         FitnessOptions.builder()
@@ -125,15 +123,7 @@ public class MainActivity extends AppCompatActivity {
         subscribe();
       }
     }
-    /*
-    if (GoogleSignIn.getLastSignedInAccount(this) != null){
-      signedIn = GoogleSignIn.getLastSignedInAccount(this).getId();
 
-    }
-    else {
-      this.startSignInIntent();
-    }
-    */
   }
 
   /** Records step data by requesting a subscription to background step data. */
@@ -213,30 +203,10 @@ public class MainActivity extends AppCompatActivity {
     return super.onOptionsItemSelected(item);
   }
 
-  /** Initializes a custom log class that outputs both to in-app targets and logcat. */
-  private void initializeLogging() {
-    // Wraps Android's native log framework.
-    LogWrapper logWrapper = new LogWrapper();
-    // Using Log, front-end to the logging chain, emulates android.util.log method signatures.
-    Log.setLogNode(logWrapper);
-    // Filter strips out everything except the message text.
-    MessageOnlyLogFilter msgFilter = new MessageOnlyLogFilter();
-    logWrapper.setNext(msgFilter);
-    // On screen logging via a customized TextView.
-    //LogView logView = (LogView) findViewById(R.id.sample_logview);
-
-    // Fixing this lint error adds logic without benefit.
-    // noinspection AndroidLintDeprecation
-    //.setTextAppearance(R.style.Log);
-
-    //logView.setBackgroundColor(Color.WHITE);
-    //msgFilter.setNext(logView);
-    textView.append("\n Ready");
-  }
 
   Date currentTime = Calendar.getInstance().getTime();
 
-  DateFormat df = new SimpleDateFormat("dd/MM/yyyy, HH:mm");
+  DateFormat df = new SimpleDateFormat("MM/dd/yyyy, HH:mm");
 
   private void displayOldWorkout(){
     FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -263,6 +233,8 @@ public class MainActivity extends AppCompatActivity {
   }
   ArrayList<String> userSteps = new ArrayList<String>();
   ArrayList<Integer> steps  = new ArrayList<Integer>();
+
+
   private void compareData(){
     //Read in other users data
     FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -274,10 +246,7 @@ public class MainActivity extends AppCompatActivity {
                 if (task.isSuccessful()) {
                   for (DocumentSnapshot document : task.getResult()) {
                     userSteps.add(document.get("steps").toString());
-
-
                   }
-                  //sort here
 
                   for(int x = 0; x < userSteps.size(); x++){
                     steps.add(Integer.valueOf(userSteps.get(x)));
